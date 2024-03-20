@@ -1,4 +1,4 @@
-module github.com/ugd/listmonk
+module github.com/knadh/listmonk
 
 go 1.20
 
