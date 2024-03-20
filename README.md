@@ -12,13 +12,13 @@ Visit [listmonk.app](https://listmonk.app) for more info. Check out the [**live 
 
 ### Docker
 
-The latest image is available on DockerHub at [`listmonk/listmonk:latest`](https://hub.docker.com/r/listmonk/listmonk/tags?page=1&ordering=last_updated&name=latest). Use the sample [docker-compose.yml](https://github.com/knadh/listmonk/blob/master/docker-compose.yml) to run manually or use the helper script. 
+The latest image is available on DockerHub at [`ugd/listmonk:latest`](https://hub.docker.com/r/ugd/listmonk/tags?page=1&ordering=last_updated&name=latest). Use the sample [docker-compose.yml](https://github.com/ugd/listmonk/blob/master/docker-compose.yml) to run manually or use the helper script.
 
 #### Demo
 
 ```bash
 mkdir listmonk-demo && cd listmonk-demo
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/knadh/listmonk/master/install-demo.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ugd/listmonk/master/install-demo.sh)"
 ```
 
 DO NOT use this demo setup in production.
@@ -27,29 +27,32 @@ DO NOT use this demo setup in production.
 
 ```bash
 mkdir listmonk && cd listmonk
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/knadh/listmonk/master/install-prod.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ugd/listmonk/master/install-prod.sh)"
 ```
+
 Visit `http://localhost:9000`.
 
 **NOTE**: Always examine the contents of shell scripts before executing them.
 
 See [installation docs](https://listmonk.app/docs/installation).
 
-__________________
+---
 
 ### Binary
-- Download the [latest release](https://github.com/knadh/listmonk/releases) and extract the listmonk binary.
+
+- Download the [latest release](https://github.com/ugd/listmonk/releases) and extract the listmonk binary.
 - `./listmonk --new-config` to generate config.toml. Then, edit the file.
 - `./listmonk --install` to setup the Postgres DB (or `--upgrade` to upgrade an existing DB. Upgrades are idempotent and running them multiple times have no side effects).
 - Run `./listmonk` and visit `http://localhost:9000`.
 
 See [installation docs](https://listmonk.app/docs/installation).
-__________________
 
+---
 
 ## Developers
-listmonk is a free and open source software licensed under AGPLv3. If you are interested in contributing, refer to the [developer setup](https://listmonk.app/docs/developer-setup). The backend is written in Go and the frontend is Vue with Buefy for UI. 
 
+listmonk is a free and open source software licensed under AGPLv3. If you are interested in contributing, refer to the [developer setup](https://listmonk.app/docs/developer-setup). The backend is written in Go and the frontend is Vue with Buefy for UI.
 
 ## License
+
 listmonk is licensed under the AGPL v3 license.

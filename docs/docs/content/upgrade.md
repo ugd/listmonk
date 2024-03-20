@@ -3,6 +3,7 @@
 Some versions may require changes to the database. These changes or database "migrations" are applied automatically and safely, but, it is recommended to take a backup of the Postgres database before running the `--upgrade` option, especially if you have made customizations to the database tables.
 
 ## Binary
+
 - Download the [latest release](https://github.com/knadh/listmonk/releases) and extract the listmonk binary.
 - `./listmonk --upgrade` to upgrade an existing DB. Upgrades are idempotent and running them multiple times have no side effects.
 - Run `./listmonk` and visit `http://localhost:9000`.
@@ -18,6 +19,7 @@ If it's not running as a service, `pkill -9 listmonk` will stop the listmonk pro
 - Run `docker compose up app db` and visit `http://localhost:9000`.
 
 ## Railway
+
 - Head to your dashboard, and select your Listmonk project.
 - Select the GitHub deployment service.
 - In the Deployment tab, head to the latest deployment, click on the three vertical dots to the right, and select "Redeploy".
@@ -38,10 +40,13 @@ To restore a previous version, you have to restore the DB for that particular ve
 **Example with docker:**
 
 1. Stop listmonk (app):
+
 ```
 sudo docker stop listmonk_app
 ```
+
 2. Restore your pre-upgrade db (required) _(be careful, this will wipe your existing DB)_:
+
 ```
 psql -h 127.0.0.1 -p 9432 -U listmonk
 drop schema public cascade;
@@ -49,12 +54,14 @@ create schema public;
 \q
 psql -h 127.0.0.1 -p 9432 -U listmonk -W listmonk < listmonk-preupgrade-db.sql
 ```
+
 3. Edit the `docker-compose.yml`:
+
 ```
 x-app-defaults: &app-defaults
   restart: unless-stopped
-  image: listmonk/listmonk:v2.4.0
+  image: ugd/listmonk:v2.4.0
 ```
-4. Restart:
-`sudo docker compose up -d app db nginx certbot`
 
+4. Restart:
+   `sudo docker compose up -d app db nginx certbot`
