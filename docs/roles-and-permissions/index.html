@@ -12,7 +12,7 @@
         <link rel="prev" href="../external-integration/">
       
       
-        <link rel="next" href="../apis/apis/">
+        <link rel="next" href="../oidc/">
       
       
       <link rel="icon" href="../images/favicon.png">
@@ -373,6 +373,8 @@
       
         
       
+        
+      
     
     
     
@@ -676,6 +678,29 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../oidc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    OIDC SSO
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1258,7 +1283,7 @@
 <tr>
 <td></td>
 <td>subscribers:sql_query</td>
-<td>Run SQL queries on subscriber data. <strong>WARNING:</strong> This permission will allow the querying of all lists and subscribers directly from the database with SQL expressions, superceding individual list and subscriber permissions above.</td>
+<td>Run raw SQL queries on subscriber data. <strong>WARNING:</strong> This permission allows execution of arbitrary SQL expressions and SQL functions. While it is a readonly feature designed to allow querying of all lists and subscribers directly from the database superceding individual list and subscriber permissions above, raw SQL expressions makes it possible to obtain Postgres database configuration such as version and paths. Give this permission only to trusted users.</td>
 </tr>
 <tr>
 <td></td>
