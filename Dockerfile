@@ -17,8 +17,8 @@ RUN go mod download
 # Copy static directory first to ensure it exists for frontend postinstall script
 COPY static/ ./static/
 
-# Create frontend-specific ignore file for ESLint
-RUN echo -e "node_modules/\n.cache/\nyarn.lock\nbuild/\npublic/static/email-builder/\ndist/\nemail-builder/dist/" > ./frontend/.gitignore
+# Create frontend directory and ignore file for ESLint
+RUN mkdir -p ./frontend && echo -e "node_modules/\n.cache/\nyarn.lock\nbuild/\npublic/static/email-builder/\ndist/\nemail-builder/dist/" > ./frontend/.gitignore
 
 COPY frontend/package.json frontend/yarn.lock ./frontend/
 COPY frontend/email-builder/package.json frontend/email-builder/yarn.lock ./frontend/email-builder/
