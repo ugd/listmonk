@@ -27,6 +27,10 @@ Visit `http://localhost:9000`
 
 See [installation docs](https://listmonk.app/docs/installation)
 
+#### Multi-architecture images
+
+Docker images are published for `linux/amd64`, `linux/386`, `linux/arm/v7`, and `linux/arm64` via the [`docker-multiarch`](.github/workflows/docker-multi-arch.yml) GitHub Actions workflow. Pushing a Git tag such as `v5.1.0` (or triggering the workflow manually) builds the Go binary and Vue assets inside the image for each platform and pushes the manifest to Docker Hub (`listmonk/listmonk`) and GHCR (`ghcr.io/<owner>/listmonk`). Reuse the workflow in downstream forks by configuring `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets.
+
 __________________
 
 ### Binary

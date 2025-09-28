@@ -76,56 +76,28 @@ func (a *App) SendTxMessage(c echo.Context) error {
 			a.i18n.Ts("globals.messages.notFound", "name", fmt.Sprintf("template %d", m.TemplateID)))
 	}
 
-	var (
-		num      = len(m.SubscriberEmails)
-		isEmails = true
-	)
-	if len(m.SubscriberIDs) > 0 {
-		num = len(m.SubscriberIDs)
-		isEmails = false
-	}
+	isEmails := len(m.SubscriberIDs) == 0
 
 	notFound := []string{}
-	for n := range num {
-		var (
-			subID    int
-			subEmail string
-		)
 
-		if !isEmails {
-			subID = m.SubscriberIDs[n]
-		} else {
-			subEmail = m.SubscriberEmails[n]
-		}
-
-		// Get the subscriber.
-		sub, err := a.core.GetSubscriber(subID, "", subEmail)
-		if err != nil {
-			// If the subscriber is not found, log that error and move on without halting on the list.
-			if er, ok := err.(*echo.HTTPError); ok && er.Code == http.StatusBadRequest {
-				notFound = append(notFound, fmt.Sprintf("%v", er.Message))
-				continue
-			}
-
-			return err
-		}
-
-		// Render the message.
-		if err := m.Render(sub, tpl); err != nil {
+	queueTx := func(sub models.Subscriber, includeSubscriber bool) error {
+		msgData := m
+		if err := msgData.Render(sub, tpl); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest,
 				a.i18n.Ts("globals.messages.errorFetching", "name"))
 		}
 
-		// Prepare the final message.
 		msg := models.Message{}
-		msg.Subscriber = sub
+		if includeSubscriber {
+			msg.Subscriber = sub
+		}
 		msg.To = []string{sub.Email}
-		msg.From = m.FromEmail
-		msg.Subject = m.Subject
-		msg.ContentType = m.ContentType
-		msg.Messenger = m.Messenger
-		msg.Body = m.Body
-		for _, a := range m.Attachments {
+		msg.From = msgData.FromEmail
+		msg.Subject = msgData.Subject
+		msg.ContentType = msgData.ContentType
+		msg.Messenger = msgData.Messenger
+		msg.Body = msgData.Body
+		for _, a := range msgData.Attachments {
 			msg.Attachments = append(msg.Attachments, models.Attachment{
 				Name:    a.Name,
 				Header:  a.Header,
@@ -133,10 +105,9 @@ func (a *App) SendTxMessage(c echo.Context) error {
 			})
 		}
 
-		// Optional headers.
-		if len(m.Headers) != 0 {
-			msg.Headers = make(textproto.MIMEHeader, len(m.Headers))
-			for _, set := range m.Headers {
+		if len(msgData.Headers) != 0 {
+			msg.Headers = make(textproto.MIMEHeader, len(msgData.Headers))
+			for _, set := range msgData.Headers {
 				for hdr, val := range set {
 					msg.Headers.Add(hdr, val)
 				}
@@ -147,10 +118,51 @@ func (a *App) SendTxMessage(c echo.Context) error {
 			a.log.Printf("error sending message (%s): %v", msg.Subject, err)
 			return err
 		}
+
+		return nil
 	}
 
-	if len(notFound) > 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, strings.Join(notFound, "; "))
+	if isEmails {
+		for _, subEmail := range m.SubscriberEmails {
+			sub, err := a.core.GetSubscriber(0, "", subEmail)
+			includeSubscriber := true
+			if err != nil {
+				if er, ok := err.(*echo.HTTPError); ok && er.Code == http.StatusBadRequest {
+					sub = models.Subscriber{
+						Email: subEmail,
+						Name:  subEmail,
+						UUID:  dummyUUID,
+					}
+					includeSubscriber = false
+				} else {
+					return err
+				}
+			}
+
+			if err := queueTx(sub, includeSubscriber); err != nil {
+				return err
+			}
+		}
+	} else {
+		for _, subID := range m.SubscriberIDs {
+			sub, err := a.core.GetSubscriber(subID, "", "")
+			if err != nil {
+				if er, ok := err.(*echo.HTTPError); ok && er.Code == http.StatusBadRequest {
+					notFound = append(notFound, fmt.Sprintf("%v", er.Message))
+					continue
+				}
+
+				return err
+			}
+
+			if err := queueTx(sub, true); err != nil {
+				return err
+			}
+		}
+
+		if len(notFound) > 0 {
+			return echo.NewHTTPError(http.StatusBadRequest, strings.Join(notFound, "; "))
+		}
 	}
 
 	return c.JSON(http.StatusOK, okResp{true})

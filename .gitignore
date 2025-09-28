@@ -10,6 +10,9 @@ email-builder/.cache/
 email-builder/yarn.lock
 email-builder/dist/
 .vscode/
+.cache/
+.gocache/
+.gopath/
 
 config.toml
 node_modules

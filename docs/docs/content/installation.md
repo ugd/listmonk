@@ -33,6 +33,9 @@ Then, visit `http://localhost:9000` to create the Super Admin user and login.
     To set the Super Admin username and password during setup, set the environment variables (only the first time):
     `LISTMONK_ADMIN_USER=myuser LISTMONK_ADMIN_PASSWORD=xxxxx docker compose up -d`
 
+!!! note "Multi-architecture Docker images"
+    Release tags trigger the [docker-multiarch GitHub workflow](https://github.com/knadh/listmonk/blob/master/.github/workflows/docker-multi-arch.yml), which builds and publishes `listmonk/listmonk` images for `linux/amd64`, `linux/386`, `linux/arm/v7`, and `linux/arm64`. Forks can reuse the workflow by configuring Docker Hub credentials as repository secrets.
+
 
 ------------
 
