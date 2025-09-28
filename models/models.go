@@ -98,11 +98,11 @@ type regTplFunc struct {
 
 var regTplFuncs = []regTplFunc{
 	// Regular expression for matching {{ TrackLink "http://link.com" }} in the template
-	// and substituting it with {{ Track "http://link.com" . }} (the dot context)
+	// and substituting it with {{ TrackLink "http://link.com" . }} (the dot context)
 	// before compilation. This is to make linking easier for users.
 	{
-		regExp:  regexp.MustCompile(`{{(\\s+)?TrackLink(\\s+)?(.+?)(\\s+)?}}`),
-		replace: `{{ TrackLink $3 . }}`,
+		regExp:  regexp.MustCompile(`{{\s*TrackLink\s+"([^"]+)"\s*}}`),
+		replace: `{{ TrackLink "$1" . }}`,
 	},
 
 	// Convert the shorthand https://google.com@TrackLink to {{ TrackLink ... }}.
@@ -331,9 +331,10 @@ type Bounce struct {
 	CreatedAt time.Time       `db:"created_at" json:"created_at"`
 
 	// One of these should be provided.
-	Email          string `db:"email" json:"email,omitempty"`
-	SubscriberUUID string `db:"subscriber_uuid" json:"subscriber_uuid,omitempty"`
-	SubscriberID   int    `db:"subscriber_id" json:"subscriber_id,omitempty"`
+	Email            string `db:"email" json:"email,omitempty"`
+	SubscriberUUID   string `db:"subscriber_uuid" json:"subscriber_uuid,omitempty"`
+	SubscriberID     int    `db:"subscriber_id" json:"subscriber_id,omitempty"`
+	SubscriberStatus string `db:"subscriber_status" json:"subscriber_status"`
 
 	CampaignUUID string           `db:"campaign_uuid" json:"campaign_uuid,omitempty"`
 	Campaign     *json.RawMessage `db:"campaign" json:"campaign"`
@@ -390,11 +391,11 @@ type TxMessage struct {
 	Headers     Headers        `json:"headers"`
 	ContentType string         `json:"content_type"`
 	Messenger   string         `json:"messenger"`
+	Subject     string         `json:"subject"`
 
 	// File attachments added from multi-part form data.
 	Attachments []Attachment `json:"-"`
 
-	Subject    string             `json:"-"`
 	Body       []byte             `json:"-"`
 	Tpl        *template.Template `json:"-"`
 	SubjectTpl *txttpl.Template   `json:"-"`
@@ -547,6 +548,7 @@ func (c *Campaign) CompileTemplate(f template.FuncMap) error {
 	for _, r := range regTplFuncs {
 		body = r.regExp.ReplaceAllString(body, r.replace)
 	}
+
 	baseTPL, err := template.New(BaseTpl).Funcs(f).Parse(body)
 	if err != nil {
 		return fmt.Errorf("error compiling base template: %v", err)
@@ -656,15 +658,35 @@ func (m *TxMessage) Render(sub Subscriber, tpl *Template) error {
 	copy(m.Body, b.Bytes())
 	b.Reset()
 
+	// Was a subject provided in the message?
+	var (
+		subjTpl *txttpl.Template
+		subject = m.Subject
+	)
+	if subject != "" {
+		if strings.Contains(m.Subject, "{{") {
+			// If the subject has a template string, render that.
+			s, err := txttpl.New(BaseTpl).Funcs(txttpl.FuncMap(nil)).Parse(m.Subject)
+			if err != nil {
+				return fmt.Errorf("error compiling subject: %v", err)
+			}
+			subjTpl = s
+		}
+	} else {
+		// Use the subject from the template.
+		subject = tpl.Subject
+		subjTpl = tpl.SubjectTpl
+	}
+
 	// If the subject is also a template, render that.
-	if tpl.SubjectTpl != nil {
-		if err := tpl.SubjectTpl.ExecuteTemplate(&b, BaseTpl, data); err != nil {
+	if subjTpl != nil {
+		if err := subjTpl.ExecuteTemplate(&b, BaseTpl, data); err != nil {
 			return err
 		}
 		m.Subject = b.String()
 		b.Reset()
 	} else {
-		m.Subject = tpl.Subject
+		m.Subject = subject
 	}
 
 	return nil

@@ -217,7 +217,7 @@ func (a *App) CreateSubscriber(c echo.Context) error {
 	listIDs := user.FilterListsByPerm(auth.PermTypeManage, req.Lists)
 
 	// Insert the subscriber into the DB.
-	sub, _, err := a.core.InsertSubscriber(req.Subscriber, listIDs, nil, req.PreconfirmSubs)
+	sub, _, err := a.core.InsertSubscriber(req.Subscriber, listIDs, nil, req.PreconfirmSubs, false)
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func (a *App) UpdateSubscriber(c echo.Context) error {
 
 	// Update the subscriber in the DB.
 	id := getID(c)
-	out, _, err := a.core.UpdateSubscriberWithLists(id, req.Subscriber, listIDs, nil, req.PreconfirmSubs, true)
+	out, _, err := a.core.UpdateSubscriberWithLists(id, req.Subscriber, listIDs, nil, req.PreconfirmSubs, true, false)
 	if err != nil {
 		return err
 	}
@@ -458,10 +458,13 @@ func (a *App) BlocklistSubscribersByQuery(c echo.Context) error {
 
 	req.Search = strings.TrimSpace(req.Search)
 	req.Query = formatSQLExp(req.Query)
-	if req.Search == "" && req.Query == "" {
+	if req.All {
+		// If the "all" flag is set, ignore any subquery that may be present.
+		req.Search = ""
+		req.Query = ""
+	} else if req.Search == "" && req.Query == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, a.i18n.Ts("globals.messages.invalidFields", "name", "query"))
 	}
-
 	// Does the user have the subscribers:sql_query permission?
 	if req.Query != "" {
 		if !user.HasPerm(auth.PermSubscribersSqlQuery) {
@@ -495,9 +498,6 @@ func (a *App) ManageSubscriberListsByQuery(c echo.Context) error {
 
 	req.Search = strings.TrimSpace(req.Search)
 	req.Query = formatSQLExp(req.Query)
-	if req.Search == "" && req.Query == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, a.i18n.Ts("globals.messages.invalidFields", "name", "query"))
-	}
 
 	// Does the user have the subscribers:sql_query permission?
 	if req.Query != "" {
