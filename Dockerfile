@@ -14,6 +14,9 @@ RUN apt-get update \
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Copy static directory first to ensure it exists for frontend postinstall script
+COPY static/ ./static/
+
 COPY frontend/package.json frontend/yarn.lock ./frontend/
 COPY frontend/email-builder/package.json frontend/email-builder/yarn.lock ./frontend/email-builder/
 RUN cd frontend && yarn install --frozen-lockfile \
